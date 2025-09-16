@@ -19,7 +19,11 @@ export const handler = async (event) => {
       })
     )
 
-    if (!bookingResult.Item || bookingResult.Item.sk.S !== bookingId)
+    if (
+      !bookingResult.Item ||
+      bookingResult.Item.sk.S !== bookingId ||
+      bookingResult.Item.email.S !== email
+    )
       throw new Error("Booking not found")
 
     await client.send(
