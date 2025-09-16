@@ -1,4 +1,4 @@
-import { DeleteItemCommand } from "@aws-sdk/client-dynamodb"
+import { GetItemCommand, DeleteItemCommand } from "@aws-sdk/client-dynamodb"
 import { client } from "../../service/db.js"
 
 export const handler = async (event) => {
@@ -8,8 +8,19 @@ export const handler = async (event) => {
     if (!bookingId) throw new Error("No booking id provided")
     if (!email) throw new Error("Request failed. No email provided.")
 
-    // import getBooking() för att kunna dubbelkolla om bokningen finns från dynamoDB
-    // if(!booking || bookingId !== booking.sk) throw new Error("No booking found")
+    // Kolla om bokning finns i databasen
+    const bookingResult = await client.send(
+      new GetItemCommand({
+        TableName: "BonzaiTable",
+        Key: {
+          pk: { S: "BOOKING" },
+          sk: { S: bookingId },
+        },
+      })
+    )
+
+    if (!bookingResult.Item || bookingResult.Item.sk.S !== bookingId)
+      throw new Error("Booking not found")
 
     await client.send(
       new DeleteItemCommand({
