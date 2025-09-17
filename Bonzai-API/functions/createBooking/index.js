@@ -1,13 +1,14 @@
-import { nanoid } from "nanoid";
-import { client } from "../../service/db.js";
-import { PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { nanoid } from "nanoid"
+import { client } from "../../service/db.js"
+import { PutItemCommand } from "@aws-sdk/client-dynamodb"
 
 export const handler = async (event) => {
   try {
-    const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(event.body);
+    const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(
+      event.body
+    )
 
-
-    const bookingId = nanoid(8);
+    const bookingId = nanoid(8)
 
     const rooms = {
       single: {
@@ -22,41 +23,41 @@ export const handler = async (event) => {
         capacity: 3,
         price: 1500,
       },
-    };
+    }
 
     // Räkna ut antal rum.
-    let remainingRooms = 20;
+    let remainingRooms = 20
 
     const totalRooms = bookedRooms.reduce(
       (summa, room) => summa + room.amount,
       0
-    );
+    )
     if (totalRooms > remainingRooms) {
       return {
         statusCode: 400,
         body: JSON.stringify({
           message: `Not enough rooms available, ${remainingRooms} rooms left`,
         }),
-      };
+      }
     }
 
     // Räkna ut om de finns tillräckligt med rum för antalet gäster
     const totalCapacity = bookedRooms.reduce(
       (summa, room) => summa + rooms[room.type].capacity * room.amount,
       0
-    );
+    )
 
     if (guests > totalCapacity) {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: "Not enough capacity for guests" }),
-      };
+      }
     }
     // Räkna ut totalpriset för bokningen
     const totalPrice = bookedRooms.reduce(
       (summa, room) => summa + rooms[room.type].price * room.amount,
       0
-    );
+    )
 
     //Exempel på data från frontend
     /* {
@@ -66,6 +67,8 @@ export const handler = async (event) => {
       { type: "double", amount: 2 },
       { type: "suite", amount: 0 }
     ],
+    "checkIn": "2025-09-07",
+    "checkOut": "2025-09-09",
     "name": "Anna Andersson",
     "email": "anna@example.com"
     }
@@ -74,7 +77,7 @@ export const handler = async (event) => {
     const getAmount = (type) =>
       Array.isArray(bookedRooms)
         ? bookedRooms.find((r) => r.type === type)?.amount ?? 0
-        : 0;
+        : 0
 
     const command = {
       TableName: "BonzaiTable",
@@ -94,9 +97,9 @@ export const handler = async (event) => {
         checkIn: { S: checkIn },
         checkOut: { S: checkOut },
       },
-    };
+    }
 
-    await client.send(new PutItemCommand(command));
+    await client.send(new PutItemCommand(command))
 
     const response = {
       bookingId,
@@ -109,7 +112,7 @@ export const handler = async (event) => {
       checkIn,
       checkOut,
       createdAt: new Date().toISOString(),
-    };
+    }
 
     return {
       statusCode: 201,
@@ -117,12 +120,12 @@ export const handler = async (event) => {
         message: "Booking confirmed",
         response,
       }),
-    };
+    }
   } catch (error) {
-    console.error("Error creating booking:", error);
+    console.error("Error creating booking:", error)
     return {
       statusCode: 500,
       body: JSON.stringify({ message: "Internal server error" }),
-    };
+    }
   }
-};
+}
