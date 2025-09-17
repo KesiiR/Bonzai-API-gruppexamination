@@ -7,6 +7,7 @@ export const handler = async (event) => {
     const { guests, bookedRooms, name, email } = JSON.parse(event.body);
 
     const bookingId = nanoid(8);
+    
     const rooms = {
       single: {
         capacity: 1,
