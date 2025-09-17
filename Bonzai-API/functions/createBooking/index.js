@@ -6,8 +6,9 @@ export const handler = async (event) => {
   try {
     const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(event.body);
 
+
     const bookingId = nanoid(8);
-    
+
     const rooms = {
       single: {
         capacity: 1,
@@ -87,6 +88,8 @@ export const handler = async (event) => {
         name: { S: name },
         email: { S: email },
         totalPrice: { N: totalPrice.toString() },
+        checkIn: { S: checkIn },
+        checkOut: { S: checkOut },
         createdAt: { S: new Date().toISOString() },
         checkIn: { S: checkIn },
         checkOut: { S: checkOut },
