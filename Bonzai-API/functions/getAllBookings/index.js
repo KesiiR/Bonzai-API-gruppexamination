@@ -27,11 +27,16 @@ export const handler = async (event) => {
       const suiteRoomCount = parseInt(item.suite.N);
       const totalRoomCount = singleRoomCount + doubleRoomCount + suiteRoomCount;
 
+      const checkIn = item.checkIn?.S;
+      const checkOut = item.checkOut?.S;
+
       return {
         bookingNumber,
         numberOfGuests,
         totalRoomCount,
         guestName,
+        checkIn,
+        checkOut,
       };
     });
 
