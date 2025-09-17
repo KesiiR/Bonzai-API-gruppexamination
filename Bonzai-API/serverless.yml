@@ -16,30 +16,35 @@ provider:
 functions:
   createBooking:
     handler: functions/createBooking/index.handler
+    description: "Create a new booking"
     events:
       - httpApi:
           path: /bonzai/booking
           method: POST
   getBooking:
     handler: functions/getBooking/index.handler
+    description: "Get a booking by ID"
     events:
       - httpApi:
           path: /bonzai/booking/{id}
           method: GET
   updateBooking:
     handler: functions/updateBooking/index.handler
+    description: "Update a booking by ID"
     events:
       - httpApi:
           path: /bonzai/booking/{id}
           method: PUT
   deleteBooking:
     handler: functions/deleteBooking/index.handler
+    description: "Delete a booking by ID"
     events:
       - httpApi:
           path: /bonzai/booking/{id}
           method: DELETE
   getAllBookings:
     handler: functions/getAllBookings/index.handler
+    description: "Get all bookings"
     events:
       - httpApi:
           path: /bonzai/bookings
