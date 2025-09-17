@@ -8,9 +8,9 @@ Bunny Monkeys
 {
   "guests": 4,
   "bookedRooms": [
-    { "type": "single", "amount": 2 },
-    { "type": "double", "amount": 1 },
-    { "type": "suite", "amount": 0 }
+    { "type": "single", "amount": 2 }, <br/>
+    { "type": "double", "amount": 1 }, <br/>
+    { "type": "suite", "amount": 0 } <br/>
   ],
     "checkIn": "2025-09-09",
     "checkOut": "2025-09-12",
@@ -24,9 +24,9 @@ Id in url.
 {
  "guests": 6,
 	"bookedRooms": [
-		{ "type": "single", "amount": 1 },
-		{ "type": "double", "amount": 1 },
-		{ "type": "suite", "amount": 1 }
+		{ "type": "single", "amount": 1 }, <br/>
+		{ "type": "double", "amount": 1 }, <br/>
+		{ "type": "suite", "amount": 1 } <br/>
 	],
 	"name": "Anna Andersson",
 }
