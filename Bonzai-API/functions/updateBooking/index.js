@@ -3,7 +3,9 @@ import { GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 
 export const handler = async (event) => {
   try {
-    const { guests, bookedRooms, name, checkIn, checkOut } = JSON.parse(event.body);
+    const { guests, bookedRooms, name, checkIn, checkOut } = JSON.parse(
+      event.body
+    );
     const { id } = event.pathParameters;
     const rooms = {
       single: {
@@ -118,6 +120,7 @@ export const handler = async (event) => {
         : 0;
 
     // Kanske lägga till en attribut för hur många rum som totalt bokats
+    // Dubbelkolla att checkin och checkout finns, är gilitga osv
     const command = new UpdateItemCommand({
       TableName: 'BonzaiTable',
       Key: {
@@ -130,7 +133,9 @@ export const handler = async (event) => {
         #single = :single,
         #double = :double,
         #suite = :suite,
-        totalPrice = :totalPrice
+        totalPrice = :totalPrice,
+        checkIn = :checkIn,
+        checkOut = :checkOut
         `,
       ExpressionAttributeNames: {
         '#single': 'single',
@@ -143,14 +148,14 @@ export const handler = async (event) => {
         ':double': { N: getAmount('double').toString() },
         ':suite': { N: getAmount('suite').toString() },
         ':totalPrice': { N: totalPrice.toString() || '0' },
+        ':checkIn': { S: checkIn },
+        ':checkOut': { S: checkOut },
       },
 
       ReturnValues: 'ALL_NEW',
     });
 
     const response = await client.send(command);
-
-    console.log(response);
 
     const updatedBookingConfirmation = {
       id,
