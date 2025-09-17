@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid"
 import { client } from "../../service/db.js"
 import { PutItemCommand } from "@aws-sdk/client-dynamodb"
+import { validateDates } from "../validation/validateRequest.js"
 
 export const handler = async (event) => {
   try {
@@ -24,6 +25,10 @@ export const handler = async (event) => {
         price: 1500,
       },
     }
+
+    //Kör validateDates i validation
+    const dateError = validateDates(checkIn, checkOut)
+    if (dateError) return dateError
 
     // Räkna ut antal rum.
     let remainingRooms = 20

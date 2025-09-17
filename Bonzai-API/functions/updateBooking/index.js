@@ -1,6 +1,6 @@
 import { client } from "../../service/db.js"
 import { GetItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb"
-import { isValidDate } from "../validation/validateRequest.js"
+import { validateDates } from "../validation/validateRequest.js"
 
 export const handler = async (event) => {
   try {
@@ -42,29 +42,8 @@ export const handler = async (event) => {
       }
     }
 
-    if (!isValidDate(checkIn) || !isValidDate(checkOut)) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message:
-            "checkIn and checkOut must be valid dates in format YYYY-MM-DD",
-        }),
-      }
-    }
-
-    // Konverterar till riktiga Date-objekt
-    const checkInDate = new Date(checkIn)
-    const checkOutDate = new Date(checkOut)
-
-    //Kollar om checkIn är före checkOut
-    if (checkOutDate <= checkInDate) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: "checkOut must be after checkIn",
-        }),
-      }
-    }
+    const dateError = validateDates(checkIn, checkOut)
+    if (dateError) return dateError
 
     const commandForGettingBooking = new GetItemCommand({
       TableName: "BonzaiTable",
