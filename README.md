@@ -15,7 +15,8 @@ Bunny Monkeys
   ],
     "checkIn": "2025-09-09",
     "checkOut": "2025-09-12",
-  	"name": "Banana Apple"
+  	"name": "Anna Andersson",
+	"email": "anna@example.com"
 }
 </pre>
 
@@ -29,7 +30,9 @@ Id in url.
 		{ "type": "double", "amount": 1 }, 
 		{ "type": "suite", "amount": 1 }
 	],
-	"name": "Anna Andersson",
+	"checkIn": "2025-09-09",
+    "checkOut": "2025-09-12",
+	"name": "Anna Andersson"
 }
 </pre>
 
