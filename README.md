@@ -5,7 +5,7 @@ Bunny Monkeys
 
 ### POST Booking
 
-<pre> ```json
+<pre>
 {
   "guests": 4,
   "bookedRooms": [
@@ -17,11 +17,11 @@ Bunny Monkeys
     "checkOut": "2025-09-12",
   	"name": "Banana Apple"
 }
-``` </pre>
+</pre>
 
 ### PUT Booking
 Id in url.
-<pre> ```json
+<pre>
 {
  "guests": 6,
 	"bookedRooms": [
@@ -31,13 +31,13 @@ Id in url.
 	],
 	"name": "Anna Andersson",
 }
-``` </pre>
+</pre>
 
 ### DELETE Booking
 Id in url.
-<pre> ```json
+<pre>
 { 
   "email": "anna@example.com"
 }
-``` </pre>
+</pre>
 
