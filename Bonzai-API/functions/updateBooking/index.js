@@ -3,7 +3,7 @@ import { GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 
 export const handler = async (event) => {
   try {
-    const { guests, bookedRooms, name } = JSON.parse(event.body);
+    const { guests, bookedRooms, name, checkIn, checkOut } = JSON.parse(event.body);
     const { id } = event.pathParameters;
     const rooms = {
       single: {
@@ -160,12 +160,14 @@ export const handler = async (event) => {
       suiteRooms: getAmount('suite'),
       totalPrice,
       name,
+      checkIn,
+      checkOut,
       createdAt: bookingResponse.Item.createdAt.S,
       modifiedAt: new Date().toISOString(),
     };
 
     return {
-      statusCode: 201,
+      statusCode: 200,
       body: JSON.stringify({
         message: 'Booking updated successfully',
         updatedBookingConfirmation,

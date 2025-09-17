@@ -4,9 +4,8 @@ import { PutItemCommand } from "@aws-sdk/client-dynamodb";
 
 export const handler = async (event) => {
   try {
-    const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(
-      event.body
-    );
+    const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(event.body);
+
 
     const bookingId = nanoid(8);
 
@@ -92,6 +91,8 @@ export const handler = async (event) => {
         checkIn: { S: checkIn },
         checkOut: { S: checkOut },
         createdAt: { S: new Date().toISOString() },
+        checkIn: { S: checkIn },
+        checkOut: { S: checkOut },
       },
     };
 
