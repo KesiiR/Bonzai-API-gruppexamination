@@ -21,13 +21,6 @@ functions:
       - httpApi:
           path: /bonzai/booking
           method: POST
-  getBooking:
-    handler: functions/getBooking/index.handler
-    description: "Get a booking by ID"
-    events:
-      - httpApi:
-          path: /bonzai/booking/{id}
-          method: GET
   updateBooking:
     handler: functions/updateBooking/index.handler
     description: "Update a booking by ID"
