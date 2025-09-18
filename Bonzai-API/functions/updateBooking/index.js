@@ -169,6 +169,7 @@ export const handler = async (event) => {
       singleRooms: getAmount('single'),
       doubleRooms: getAmount('double'),
       suiteRooms: getAmount('suite'),
+      totalRooms,
       totalPrice,
       name,
       checkIn,
