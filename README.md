@@ -1,6 +1,11 @@
 # Gruppexamination Bonz.Ai API 
 Bunny Monkeys
 
+## .env:
+MY_ROLE =
+<br/>
+MY_ORG =
+
 ## Data In Body
 
 ### POST Booking
