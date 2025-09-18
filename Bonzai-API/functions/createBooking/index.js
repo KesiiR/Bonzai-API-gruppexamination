@@ -1,11 +1,46 @@
 import { nanoid } from "nanoid";
 import { client } from "../../service/db.js";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { errorResponse } from "../../responses/errorHandling.js";
+import {
+  validateRequired,
+  validateEmail,
+  validateName,
+  validateGuests,
+  validateRooms,
+  validateDate,
+} from "../../utils/validateRequests.js";
 
 export const handler = async (event) => {
   try {
-    const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(event.body);
+    const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(
+      event.body
+    );
 
+    // Validerar alla fält i bodyn
+    const reqError = validateRequired(
+      { guests, bookedRooms, name, email, checkIn, checkOut },
+      ["guests", "bookedRooms", "name", "email", "checkIn", "checkOut"]
+    );
+    if (reqError) return errorResponse(400, reqError);
+
+    const emailError = validateEmail(email);
+    if (emailError) return errorResponse(400, emailError);
+
+    const nameError = validateName(name);
+    if (nameError) return errorResponse(400, nameError);
+
+    const guestsError = validateGuests(guests);
+    if (guestsError) return errorResponse(400, guestsError);
+
+    const roomsError = validateRooms(bookedRooms);
+    if (roomsError) return errorResponse(400, roomsError);
+
+    const checkInError = validateDate(checkIn);
+    if (checkInError) return errorResponse(400, "checkIn: " + checkInError);
+
+    const checkOutError = validateDate(checkOut);
+    if (checkOutError) return errorResponse(400, "checkOut: " + checkOutError);
 
     const bookingId = nanoid(8);
 
