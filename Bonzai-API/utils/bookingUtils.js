@@ -16,8 +16,8 @@ export const rooms = {
 // Räknar totalt antal bokade rum i en array med rumobjekt
 export function getTotalBookedRoomCount(arr) {
   return arr.reduce((sum, room) => {
-    return sum + room.amount, 0;
-  });
+    return sum + room.amount;
+  }, 0);
 }
 
 // Hämtar antal bokade rum av en viss typ (single, double, suite)
