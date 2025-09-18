@@ -1,7 +1,15 @@
-import { nanoid } from 'nanoid';
-import { client } from '../../service/db.js';
-import { PutItemCommand } from '@aws-sdk/client-dynamodb';
-import { validateDates } from '../validation/validateRequest.js';
+import { nanoid } from "nanoid";
+import { client } from "../../service/db.js";
+import { PutItemCommand } from "@aws-sdk/client-dynamodb";
+import {
+  validateDates,
+  validateEmail,
+  validateName,
+  validateGuests,
+  validateRooms,
+  validateRequired,
+} from "../validation/validateRequest.js";
+import { errorResponse } from "../../responses/errorHandling.js";
 
 export const handler = async (event) => {
   try {
@@ -26,9 +34,28 @@ export const handler = async (event) => {
       },
     };
 
+    // Validerar alla fält i bodyn
+    const reqError = validateRequired(
+      { guests, bookedRooms, name, email, checkIn, checkOut },
+      ["guests", "bookedRooms", "name", "email", "checkIn", "checkOut"]
+    );
+    if (reqError) return errorResponse(400, reqError);
+
+    const emailError = validateEmail(email);
+    if (emailError) return errorResponse(400, emailError);
+
+    const nameError = validateName(name);
+    if (nameError) return errorResponse(400, nameError);
+
+    const guestsError = validateGuests(guests);
+    if (guestsError) return errorResponse(400, guestsError);
+
+    const roomsError = validateRooms(bookedRooms);
+    if (roomsError) return errorResponse(400, roomsError);
+
     //Kör validateDates i validation
     const dateError = validateDates(checkIn, checkOut);
-    if (dateError) return dateError;
+    if (dateError) return errorResponse(400, dateError);
 
     // Räkna ut antal rum.
     let remainingRooms = 20;
@@ -55,7 +82,7 @@ export const handler = async (event) => {
     if (guests > totalCapacity) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ message: 'Not enough capacity for guests' }),
+        body: JSON.stringify({ message: "Not enough capacity for guests" }),
       };
     }
     // Räkna ut totalpriset för bokningen
@@ -85,14 +112,14 @@ export const handler = async (event) => {
         : 0;
 
     const command = {
-      TableName: 'BonzaiTable',
+      TableName: "BonzaiTable",
       Item: {
-        pk: { S: 'BOOKING' },
+        pk: { S: "BOOKING" },
         sk: { S: bookingId },
         guests: { N: guests.toString() },
-        single: { N: getAmount('single').toString() },
-        double: { N: getAmount('double').toString() },
-        suite: { N: getAmount('suite').toString() },
+        single: { N: getAmount("single").toString() },
+        double: { N: getAmount("double").toString() },
+        suite: { N: getAmount("suite").toString() },
         totalRooms: { N: totalRooms.toString() },
         name: { S: name },
         email: { S: email },
@@ -110,9 +137,9 @@ export const handler = async (event) => {
     const response = {
       bookingId,
       guests,
-      singleRooms: getAmount('single'),
-      doubleRooms: getAmount('double'),
-      suiteRooms: getAmount('suite'),
+      singleRooms: getAmount("single"),
+      doubleRooms: getAmount("double"),
+      suiteRooms: getAmount("suite"),
       totalRooms,
       totalPrice,
       name,
@@ -124,15 +151,15 @@ export const handler = async (event) => {
     return {
       statusCode: 201,
       body: JSON.stringify({
-        message: 'Booking confirmed',
+        message: "Booking confirmed",
         response,
       }),
     };
   } catch (error) {
-    console.error('Error creating booking:', error);
+    console.error("Error creating booking:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: 'Internal server error' }),
+      body: JSON.stringify({ message: "Internal server error" }),
     };
   }
 };
