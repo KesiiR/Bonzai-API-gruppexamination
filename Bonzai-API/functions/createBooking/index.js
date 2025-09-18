@@ -8,8 +8,8 @@ import {
   validateName,
   validateGuests,
   validateRooms,
-  validateDate,
-} from "../../utils/validateRequests.js";
+  validateDates,
+} from "../validation/validateRequests.js";
 
 export const handler = async (event) => {
   try {
@@ -36,11 +36,9 @@ export const handler = async (event) => {
     const roomsError = validateRooms(bookedRooms);
     if (roomsError) return errorResponse(400, roomsError);
 
-    const checkInError = validateDate(checkIn);
-    if (checkInError) return errorResponse(400, "checkIn: " + checkInError);
-
-    const checkOutError = validateDate(checkOut);
-    if (checkOutError) return errorResponse(400, "checkOut: " + checkOutError);
+    //Kör validateDates i validation
+    const dateError = validateDates(checkIn, checkOut);
+    if (dateError) return dateError;
 
     const bookingId = nanoid(8);
 
