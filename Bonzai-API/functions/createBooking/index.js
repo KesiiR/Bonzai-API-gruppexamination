@@ -1,6 +1,6 @@
-import { nanoid } from "nanoid";
-import { client } from "../../service/db.js";
-import { PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { nanoid } from 'nanoid';
+import { client } from '../../service/db.js';
+import { PutItemCommand } from '@aws-sdk/client-dynamodb';
 import {
   validateDates,
   validateEmail,
@@ -8,36 +8,31 @@ import {
   validateGuests,
   validateRooms,
   validateRequired,
-} from "../validation/validateRequest.js";
-import { errorResponse } from "../../responses/errorHandling.js";
+  validateRemainingRooms,
+  validateTotalGuestCapacity,
+  validateArrayIsNotEmpty,
+} from '../validation/validateRequest.js';
+import {
+  getTotalBookedRoomCount,
+  getTotalGuestCapacity,
+  getTotalBookingPrice,
+  getRoomCountByType,
+} from '../../utils/bookingUtils.js';
+import { successResponse, errorResponse } from '../../responses/errorHandling.js';
 
 export const handler = async (event) => {
   try {
+    // Hämtar och parser inkommande datan
     const { guests, bookedRooms, name, email, checkIn, checkOut } = JSON.parse(
       event.body
     );
-
+    // Skapar ett bokningsID
     const bookingId = nanoid(8);
-
-    const rooms = {
-      single: {
-        capacity: 1,
-        price: 500,
-      },
-      double: {
-        capacity: 2,
-        price: 1000,
-      },
-      suite: {
-        capacity: 3,
-        price: 1500,
-      },
-    };
 
     // Validerar alla fält i bodyn
     const reqError = validateRequired(
       { guests, bookedRooms, name, email, checkIn, checkOut },
-      ["guests", "bookedRooms", "name", "email", "checkIn", "checkOut"]
+      ['guests', 'bookedRooms', 'name', 'email', 'checkIn', 'checkOut']
     );
     if (reqError) return errorResponse(400, reqError);
 
@@ -57,109 +52,76 @@ export const handler = async (event) => {
     const dateError = validateDates(checkIn, checkOut);
     if (dateError) return errorResponse(400, dateError);
 
-    // Räkna ut antal rum.
-    let remainingRooms = 20;
-
-    const totalRooms = bookedRooms.reduce(
-      (summa, room) => summa + room.amount,
-      0
+    const noBookedRoomError = validateArrayIsNotEmpty(
+      bookedRooms,
+      'At least one room must be booked.'
     );
-    if (totalRooms > remainingRooms) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          message: `Not enough rooms available, ${remainingRooms} rooms left`,
-        }),
-      };
+    if (noBookedRoomError) {
+      return errorResponse(400, noBookedRoomError);
+    }
+    // Beräknbar antalet rum och kontrollerar tillgängligheten
+    const totalRooms = getTotalBookedRoomCount(bookedRooms);
+    let remainingRooms = 20;
+    const totalRoomsError = validateRemainingRooms(totalRooms, remainingRooms);
+    if (totalRoomsError) {
+      return errorResponse(400, totalRoomsError);
     }
 
-    // Räkna ut om de finns tillräckligt med rum för antalet gäster
-    const totalCapacity = bookedRooms.reduce(
-      (summa, room) => summa + rooms[room.type].capacity * room.amount,
-      0
-    );
-
-    if (guests > totalCapacity) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ message: "Not enough capacity for guests" }),
-      };
+    // Kollar att den totala kapaciteten räcker för antalet gäster
+    const capacity = getTotalGuestCapacity(bookedRooms);
+    const capacityError = validateTotalGuestCapacity(capacity, guests);
+    if (capacityError) {
+      return errorResponse(400, capacityError);
     }
     // Räkna ut totalpriset för bokningen
-    const totalPrice = bookedRooms.reduce(
-      (summa, room) => summa + rooms[room.type].price * room.amount,
-      0
-    );
+    const totalPrice = getTotalBookingPrice(bookedRooms);
 
-    //Exempel på data från frontend
-    /* {
-     "guests": 5,
-    "bookedRooms": [
-      { type: "single", amount: 1 },
-      { type: "double", amount: 2 },
-      { type: "suite", amount: 0 }
-    ],
-    "checkIn": "2025-09-07",
-    "checkOut": "2025-09-09",
-    "name": "Anna Andersson",
-    "email": "anna@example.com"
-    }
-  */
+    // Tidpunkt när bokningen görs
+    const now = new Date().toISOString();
 
-    const getAmount = (type) =>
-      Array.isArray(bookedRooms)
-        ? bookedRooms.find((r) => r.type === type)?.amount ?? 0
-        : 0;
-
+    // Förbereder och skapar bokningen i DynamoDB
     const command = {
-      TableName: "BonzaiTable",
+      TableName: 'BonzaiTable',
       Item: {
-        pk: { S: "BOOKING" },
+        pk: { S: 'BOOKING' },
         sk: { S: bookingId },
         guests: { N: guests.toString() },
-        single: { N: getAmount("single").toString() },
-        double: { N: getAmount("double").toString() },
-        suite: { N: getAmount("suite").toString() },
+        single: { N: getRoomCountByType(bookedRooms, 'single').toString() },
+        double: { N: getRoomCountByType(bookedRooms, 'double').toString() },
+        suite: { N: getRoomCountByType(bookedRooms, 'suite').toString() },
         totalRooms: { N: totalRooms.toString() },
         name: { S: name },
         email: { S: email },
         totalPrice: { N: totalPrice.toString() },
         checkIn: { S: checkIn },
         checkOut: { S: checkOut },
-        createdAt: { S: new Date().toISOString() },
-        checkIn: { S: checkIn },
-        checkOut: { S: checkOut },
+        createdAt: { S: now },
       },
     };
 
     await client.send(new PutItemCommand(command));
 
+    // Returnerar bokningsbekräftelse
     const response = {
       bookingId,
       guests,
-      singleRooms: getAmount("single"),
-      doubleRooms: getAmount("double"),
-      suiteRooms: getAmount("suite"),
+      singleRooms: getRoomCountByType(bookedRooms, 'single'),
+      doubleRooms: getRoomCountByType(bookedRooms, 'double'),
+      suiteRooms: getRoomCountByType(bookedRooms, 'suite'),
       totalRooms,
       totalPrice,
       name,
       checkIn,
       checkOut,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
     };
-
-    return {
-      statusCode: 201,
-      body: JSON.stringify({
-        message: "Booking confirmed",
-        response,
-      }),
-    };
+    return successResponse(200, {
+      message: 'Booking created successfully',
+      response,
+    });
   } catch (error) {
-    console.error("Error creating booking:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Internal server error" }),
-    };
+    // Fångar och loggar fel
+    console.error('Error creating booking:', error);
+    return errorResponse(500, 'Internal server error');
   }
 };
